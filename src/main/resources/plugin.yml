@@ -1,0 +1,7 @@
+name: Connection Plugin
+version: '${project.version}'
+main: me.rajtech.connectionplugin.ConnectionPlugin
+api-version: 1.19
+authors: [ Raj ]
+description: A simple plugin which is the Minecraft side of a connection system.
+website: rajtech.me

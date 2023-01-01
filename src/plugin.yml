@@ -1,0 +1,10 @@
+main: me.rajtech.connectionplugin.ConnectionPlugin
+name: ConnectionPlugin
+version: 1.0
+author: Raj Dave
+api-version: 1.19
+commands:
+  connect:
+    description: "Connection Plugin"
+    usage: "/connect"
+    aliases: [con]
