@@ -12,82 +12,131 @@ import java.sql.SQLException;
 
 public final class ConnectionPlugin extends JavaPlugin {
 
-  @Override
-  public void onEnable() {
+    String db_url = "jdbc:mysql://localhost:3306/javabase";
+    String db_username = "java";
+    String db_password = "password";
 
-    // Plugin startup logic
-    getLogger().info("ConnectionPlugin has been enabled!");
-  }
+    @Override
+    public void onEnable() {
+        // Plugin startup logic
+        getLogger().info("ConnectionPlugin has been enabled!");
+    }
 
-  @Override
-  public void onDisable() {
-    // Plugin shutdown logic
-    getLogger().info("ConnectionPlugin has been disabled!");
-  }
+    @Override
+    public void onDisable() {
+        // Plugin shutdown logic
+        getLogger().info("ConnectionPlugin has been disabled!");
+    }
 
-  public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-    if (cmd.getName().equalsIgnoreCase("connect")) {
-      // get the sender's username
-      String username = sender.getName();
-      Player player = (Player) sender;
-      String uuid = player.getUniqueId().toString();
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        // connect command
+        if (cmd.getName().equalsIgnoreCase("connect")) {
+            // get the sender's username
+            Player player = (Player) sender;
+            String uuid = player.getUniqueId().toString();
 
-      // connect to mysql database
-      String db_url = "jdbc:mysql://localhost:3306/javabase";
-      String db_username = "java";
-      String db_password = "password";
 
-      // create a new connection
-      try {
-        Connection conn = DriverManager.getConnection(db_url, db_username, db_password);
-        String sql = "SELECT * FROM users WHERE username = '" + uuid + "'";
-
-        try {
-          conn.createStatement().executeUpdate(sql);
-
-          // get the result
-          try {
-            ResultSet rs = conn.createStatement().executeQuery(sql);
-
+            // create a new connection
             try {
-              if (rs.next()) {
-                // if the username exists, check if the user is connected
-                if (rs.getBoolean("connected")) {
-                  sender.sendMessage("You are already connected.");
-                } else {
-                  // if the user is not connected, connect them
-                  String __sql = "SELECT code FROM users WHERE username = '" + uuid + "'";
-                  conn.createStatement().executeUpdate(__sql);
-                  ResultSet __rs = conn.createStatement().executeQuery(__sql);
-                  sender.sendMessage("Go to the Discord server and execute the command `/connect " + username + " " + __rs + "` to finish the connection.");
+                Connection conn = DriverManager.getConnection(db_url, db_username, db_password);
+                String sql = "SELECT * FROM users WHERE username = '" + uuid + "'";
+
+                try {
+                    conn.createStatement().executeUpdate(sql);
+
+                    // get the result
+                    try {
+                        ResultSet rs = conn.createStatement().executeQuery(sql);
+
+                        try {
+                            if (rs.next()) {
+                                // if the username exists, check if the user is connected
+                                if (rs.getBoolean("connected")) {
+                                    sender.sendMessage("You are already connected.");
+                                } else {
+                                    // if the user is not connected, connect them
+                                    ResultSet __rs = conn.createStatement().executeQuery("SELECT code FROM users WHERE username = '" + uuid + "'");
+                                    sender.sendMessage("Go to the Discord server and execute the command `/mc connect " + __rs + "` to finish the connection.");
+                                }
+                            } else {
+                                // if the username does not exist, create a new entry
+
+                                int random_code = (int)(Math.random() * 1000000);
+                                conn.createStatement().executeUpdate("INSERT INTO users (username, code, discord_id) VALUES ('" + uuid + "', '" + random_code + "', 0)");
+                                conn.commit();
+                                sender.sendMessage("Go to the Discord server and execute the command `/mc connect " + random_code + "` to finish the connection.");
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-              } else {
-                // if the username does not exist, create a new entry
 
-                int random_code = (int)(Math.random() * 1000000);
-                String _sql = "INSERT INTO users (username, code, connected) VALUES ('" + uuid + "', '" + random_code + "', false)";
-                conn.createStatement().executeUpdate(_sql);
-                sender.sendMessage("Go to the Discord server and execute the command `/connect " + username + " " + random_code + "` to finish the connection.");
-              }
             } catch (SQLException e) {
-              e.printStackTrace();
+                e.printStackTrace();
             }
-
-          } catch (SQLException e) {
-            e.printStackTrace();
-          }
-
-        } catch (SQLException e) {
-          e.printStackTrace();
         }
 
-      } catch (SQLException e) {
-        e.printStackTrace();
-      }
+        // disconnect command
+        else if (cmd.getName().equalsIgnoreCase("disconnect")) {
+            // get the sender's username
+            Player player = (Player) sender;
+            String uuid = player.getUniqueId().toString();
 
-      // db schema - username, code, connected (boolean)
+            // connect to mysql database
+            String db_url = "jdbc:mysql://localhost:3306/javabase";
+            String db_username = "java";
+            String db_password = "password";
 
+            // create a new connection
+            try {
+                Connection conn = DriverManager.getConnection(db_url, db_username, db_password);
+                String sql = "SELECT * FROM users WHERE username = '" + uuid + "'";
+
+                try {
+                    conn.createStatement().executeUpdate(sql);
+
+                    // get the result
+                    try {
+                        ResultSet rs = conn.createStatement().executeQuery(sql);
+
+                        try {
+                            if (rs.next()) {
+                                // if the username exists, check if the user is connected
+                                if (rs.getBoolean("discord_id")) {
+                                    // if the user is connected, disconnect them
+                                    String __sql = "DELETE FROM users WHERE username = '" + uuid + "'";
+                                    conn.createStatement().executeUpdate(__sql);
+                                    sender.sendMessage("You have been disconnected.");
+                                } else {
+                                    sender.sendMessage("You are not connected.");
+                                }
+                            } else {
+                                sender.sendMessage("You are not connected.");
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+
+
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return false;
     }
-    return false;
-  }
 }

@@ -1,5 +1,5 @@
 main: me.rajtech.connectionplugin.ConnectionPlugin
-name: ConnectionPlugin
+name: MCVerify
 version: 1.0
 author: Raj Dave
 api-version: 1.19
