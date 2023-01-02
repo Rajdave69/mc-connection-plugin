@@ -88,11 +88,7 @@ public final class ConnectionPlugin extends JavaPlugin {
             // get the sender's username
             Player player = (Player) sender;
             String uuid = player.getUniqueId().toString();
-
-            // connect to mysql database
-            String db_url = "jdbc:mysql://localhost:3306/javabase";
-            String db_username = "java";
-            String db_password = "password";
+            
 
             // create a new connection
             try {
