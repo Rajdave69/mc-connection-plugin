@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 
 public final class ConnectionPlugin extends JavaPlugin {
 
@@ -39,10 +40,8 @@ public final class ConnectionPlugin extends JavaPlugin {
             // create a new connection
             try {
                 Connection conn = DriverManager.getConnection(db_url, db_username, db_password);
-                String sql = "SELECT * FROM users WHERE username = '" + uuid + "'";
+                String sql = "SELECT * FROM connection WHERE username = '" + uuid + "'";
 
-                try {
-                    conn.createStatement().executeUpdate(sql);
 
                     // get the result
                     try {
@@ -51,20 +50,22 @@ public final class ConnectionPlugin extends JavaPlugin {
                         try {
                             if (rs.next()) {
                                 // if the username exists, check if the user is connected
-                                if (rs.getBoolean("connected")) {
+                                if (rs.getBoolean("discord_id")) {
                                     sender.sendMessage("You are already connected.");
                                 } else {
                                     // if the user is not connected, connect them
-                                    ResultSet __rs = conn.createStatement().executeQuery("SELECT code FROM users WHERE username = '" + uuid + "'");
-                                    sender.sendMessage("Go to the Discord server and execute the command `/mc connect " + __rs + "` to finish the connection.");
+                                    ResultSet __rs = conn.createStatement().executeQuery("SELECT code FROM connection WHERE username = '" + uuid + "'");
+                                    __rs.next();
+                                    String code = __rs.getString("code");
+                                    sender.sendMessage("Go to the Discord server and execute the command `/connect " + code + "` to finish the connection.");
                                 }
                             } else {
                                 // if the username does not exist, create a new entry
 
                                 int random_code = (int)(Math.random() * 1000000);
-                                conn.createStatement().executeUpdate("INSERT INTO users (username, code, discord_id) VALUES ('" + uuid + "', '" + random_code + "', 0)");
-                                conn.commit();
-                                sender.sendMessage("Go to the Discord server and execute the command `/mc connect " + random_code + "` to finish the connection.");
+                                conn.createStatement().executeUpdate("INSERT INTO connection (username, code, discord_id) VALUES ('" + uuid + "', '" + random_code + "', 0)");
+                                String result = MessageFormat.format("Go to the Discord server and execute the command `/connect {0} to finish the connection.", random_code);
+                                sender.sendMessage(result);
                             }
                         } catch (SQLException e) {
                             e.printStackTrace();
@@ -78,9 +79,6 @@ public final class ConnectionPlugin extends JavaPlugin {
                     e.printStackTrace();
                 }
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
 
         // disconnect command
@@ -88,12 +86,12 @@ public final class ConnectionPlugin extends JavaPlugin {
             // get the sender's username
             Player player = (Player) sender;
             String uuid = player.getUniqueId().toString();
-            
+
 
             // create a new connection
             try {
                 Connection conn = DriverManager.getConnection(db_url, db_username, db_password);
-                String sql = "SELECT * FROM users WHERE username = '" + uuid + "'";
+                String sql = "SELECT * FROM connection WHERE username = '" + uuid + "'";
 
                 try {
                     conn.createStatement().executeUpdate(sql);
@@ -107,7 +105,7 @@ public final class ConnectionPlugin extends JavaPlugin {
                                 // if the username exists, check if the user is connected
                                 if (rs.getBoolean("discord_id")) {
                                     // if the user is connected, disconnect them
-                                    String __sql = "DELETE FROM users WHERE username = '" + uuid + "'";
+                                    String __sql = "DELETE FROM connection WHERE username = '" + uuid + "'";
                                     conn.createStatement().executeUpdate(__sql);
                                     sender.sendMessage("You have been disconnected.");
                                 } else {
